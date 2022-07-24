@@ -1,0 +1,107 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
+MinimumVisualStudioVersion = 15.0.26124.0
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastFilter", "Src\FastFilter\FastFilter.csproj", "{D47FDDF9-B47A-411C-B6A0-F59A6C9555F6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastFilter.Examples", "Src\FastFilter.Examples\FastFilter.Examples.csproj", "{276D1EB6-57A2-4808-AC3F-DCC14E996C30}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastFilter.Tests", "Src\FastFilter.Tests\FastFilter.Tests.csproj", "{24047F09-FAE0-4920-BFDB-0D8D3064B403}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Items", "_Items", "{EF1D19B3-97F1-4504-95AB-BE249F5BF29A}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		LICENSE.txt = LICENSE.txt
+		README.md = README.md
+		.editorconfig = .editorconfig
+		.globalconfig = .globalconfig
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Imports", "_Imports", "{D6E44C0A-ACC6-49BE-B28A-0898406AE276}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastFilter.Benchmarks", "Src\FastFilter.Benchmarks\FastFilter.Benchmarks.csproj", "{0DCA9367-838B-46C8-8699-655A5183A549}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Github", "_Github", "{8BE96FCD-5479-45FA-8444-A757B0A49AB2}"
+	ProjectSection(SolutionItems) = preProject
+		.github\FUNDING.yml = .github\FUNDING.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Project", "Project", "{9CF208D8-ABE2-46C2-8A7F-09D78AEF734B}"
+	ProjectSection(SolutionItems) = preProject
+		Imports\Console.props = Imports\Console.props
+		Imports\Benchmarks.props = Imports\Benchmarks.props
+		Imports\Examples.props = Imports\Examples.props
+		Imports\Library.props = Imports\Library.props
+		Imports\Tests.props = Imports\Tests.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Packages", "Packages", "{BCF300EC-36D5-4090-8873-173BF33FFDE0}"
+	ProjectSection(SolutionItems) = preProject
+		Src\Directory.Packages.props = Src\Directory.Packages.props
+		Src\Directory.Packages.Analyzers.props = Src\Directory.Packages.Analyzers.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IssueTemplates", "IssueTemplates", "{1DB935D4-B6CE-4932-BC43-CB1E0612529D}"
+	ProjectSection(SolutionItems) = preProject
+		.github\ISSUE_TEMPLATE\bug_report.md = .github\ISSUE_TEMPLATE\bug_report.md
+		.github\ISSUE_TEMPLATE\feature_request.md = .github\ISSUE_TEMPLATE\feature_request.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{D63DB5B6-B73B-4BF5-868B-38F6BC727480}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\nuget-release.yml = .github\workflows\nuget-release.yml
+		.github\workflows\generic-build.yml = .github\workflows\generic-build.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Managed", "Managed", "{831189D5-75FB-45A4-B38B-05A942288B72}"
+	ProjectSection(SolutionItems) = preProject
+		Src\Directory.Build.targets = Src\Directory.Build.targets
+		Src\Directory.Build.props = Src\Directory.Build.props
+		Imports\Readme.md = Imports\Readme.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local", "Local", "{EF086041-6B4F-402E-A07E-B40E808803C7}"
+	ProjectSection(SolutionItems) = preProject
+		Locals\Directory.Build.props = Locals\Directory.Build.props
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D47FDDF9-B47A-411C-B6A0-F59A6C9555F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D47FDDF9-B47A-411C-B6A0-F59A6C9555F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D47FDDF9-B47A-411C-B6A0-F59A6C9555F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D47FDDF9-B47A-411C-B6A0-F59A6C9555F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{276D1EB6-57A2-4808-AC3F-DCC14E996C30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{276D1EB6-57A2-4808-AC3F-DCC14E996C30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{276D1EB6-57A2-4808-AC3F-DCC14E996C30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{276D1EB6-57A2-4808-AC3F-DCC14E996C30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24047F09-FAE0-4920-BFDB-0D8D3064B403}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24047F09-FAE0-4920-BFDB-0D8D3064B403}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24047F09-FAE0-4920-BFDB-0D8D3064B403}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24047F09-FAE0-4920-BFDB-0D8D3064B403}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DCA9367-838B-46C8-8699-655A5183A549}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DCA9367-838B-46C8-8699-655A5183A549}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DCA9367-838B-46C8-8699-655A5183A549}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DCA9367-838B-46C8-8699-655A5183A549}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A9354605-C154-495A-B990-F6AB329CDE39}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1DB935D4-B6CE-4932-BC43-CB1E0612529D} = {8BE96FCD-5479-45FA-8444-A757B0A49AB2}
+		{D63DB5B6-B73B-4BF5-868B-38F6BC727480} = {8BE96FCD-5479-45FA-8444-A757B0A49AB2}
+		{831189D5-75FB-45A4-B38B-05A942288B72} = {D6E44C0A-ACC6-49BE-B28A-0898406AE276}
+		{9CF208D8-ABE2-46C2-8A7F-09D78AEF734B} = {831189D5-75FB-45A4-B38B-05A942288B72}
+		{BCF300EC-36D5-4090-8873-173BF33FFDE0} = {831189D5-75FB-45A4-B38B-05A942288B72}
+		{EF086041-6B4F-402E-A07E-B40E808803C7} = {D6E44C0A-ACC6-49BE-B28A-0898406AE276}
+	EndGlobalSection
+EndGlobal
