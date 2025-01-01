@@ -7,18 +7,6 @@ using static Genbox.FastFilter.Internals.Common;
 namespace Genbox.FastFilter;
 
 /// <summary>
-/// 8-bit variant of the binary fuse filter. Uses 9 bits per entry. False-positive rate is ~0.39%.
-/// </summary>
-/// <param name="data">Read-only data to add to the filter. Try to avoid duplicates in the data.</param>
-public class BinaryFuse8Filter<T>(ReadOnlySpan<T> data) : BinaryFuseFilter<T, byte>(data) where T : notnull;
-
-/// <summary>
-/// 16-bit variant of the binary fuse filter. Uses 18 bits per entry. False-positive rate is ~0.0015%.
-/// </summary>
-/// <param name="data">Read-only data to add to the filter. Try to avoid duplicates in the data.</param>
-public class BinaryFuse16Filter<T>(ReadOnlySpan<T> data) : BinaryFuseFilter<T, ushort>(data) where T : notnull;
-
-/// <summary>
 /// A generic variant of the binary fuse filter. Only for advanced use-cases such as 32/64bit binary fuse filters. Use <see cref="BinaryFuse8Filter{T}"/> or <see cref="BinaryFuse16Filter{T}"/> instead.
 /// </summary>
 public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T2 : INumberBase<T2>, IBitwiseOperators<T2, T2, T2>
