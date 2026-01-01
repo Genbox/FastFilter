@@ -31,7 +31,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
 
     protected BinaryFuseFilter(ReadOnlySpan<T> data)
     {
-        ArgumentOutOfRangeException.ThrowIfZero(data.Length);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(data.Length);
 
         uint size = (uint)data.Length;
 

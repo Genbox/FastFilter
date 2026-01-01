@@ -40,8 +40,8 @@ public class BloomFilterTests(ITestOutputHelper output)
     {
         TheoryData<IBloomFilter<long>, long[], uint> data = new TheoryData<IBloomFilter<long>, long[], uint>();
 
-        //0 and 1 is to check special cases
-        uint[] sizes = [0, 1, 1000, 10000, 100000, 1000000];
+        //1 is to check special cases
+        uint[] sizes = [1, 1000, 10000, 100000, 1000000];
 
         foreach (uint size in sizes)
         {

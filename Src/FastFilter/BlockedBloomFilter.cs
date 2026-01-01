@@ -22,8 +22,8 @@ public class BlockedBloomFilter<T> : IBloomFilter<T> where T : notnull
 
     public BlockedBloomFilter(int capacity, int bitsPerKey = 10)
     {
-        ArgumentOutOfRangeException.ThrowIfZero(capacity);
-        ArgumentOutOfRangeException.ThrowIfZero(bitsPerKey);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bitsPerKey);
 
         int bits = capacity * bitsPerKey;
         int buckets = bits / 64;
