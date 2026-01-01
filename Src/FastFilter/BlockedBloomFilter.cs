@@ -22,6 +22,9 @@ public class BlockedBloomFilter<T> : IBloomFilter<T> where T : notnull
 
     public BlockedBloomFilter(int capacity, int bitsPerKey = 10)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(capacity);
+        ArgumentOutOfRangeException.ThrowIfZero(bitsPerKey);
+
         int bits = capacity * bitsPerKey;
         int buckets = bits / 64;
         _arrayLength = (uint)(buckets + 8); //Genbox: We save the array length to avoid virtual calls to array.Length

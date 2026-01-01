@@ -19,8 +19,8 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
 
     public BloomFilter(int capacity, uint bitsPerKey = 8)
     {
-        if (capacity == 0)
-            capacity = 1;
+        ArgumentOutOfRangeException.ThrowIfZero(capacity);
+        ArgumentOutOfRangeException.ThrowIfZero(bitsPerKey);
 
         _k = GetBestK(bitsPerKey);
         uint bitCount = (uint)capacity * bitsPerKey;
