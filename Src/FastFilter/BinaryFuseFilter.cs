@@ -103,6 +103,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
         uint[] h012 = new uint[5];
 
         reverseOrder[size] = 1;
+        bool success = false;
         for (int loop = 0; loop < XorMaxIterations; ++loop)
         {
             // The probability of this happening is lower than the cosmic-ray probability (i.e., a cosmic ray corrupts your system)
@@ -224,7 +225,19 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
             {
                 // success
                 size = stackSize;
+                success = true;
                 break;
+            }
+
+            if (duplicates > 0)
+            {
+                HashSet<T> uniq = new HashSet<T>(keys.Length);
+
+                for (int i = 0; i < keys.Length; i++)
+                    uniq.Add(keys[i]);
+
+                size = (uint)uniq.Count;
+                keys = uniq.ToArray().AsSpan(0, (int)size);
             }
 
             Array.Clear(reverseOrder, 0, (int)size);
@@ -232,6 +245,9 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
             Array.Clear(t2Hash, 0, (int)_arrayLength);
             _seed = (ulong)Random.Shared.NextInt64();
         }
+
+        if (!success)
+            throw new InvalidOperationException("Failed to construct binary fuse filter within the iteration limit.");
 
         for (uint i = size - 1; i < size; i--)
         {
