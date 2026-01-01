@@ -70,7 +70,7 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
 
     public override string ToString() => "BloomFilter";
 
-    private static byte GetBestK(uint bitsPerItem) => (byte)Math.Max(1, (int)Math.Round(bitsPerItem * Math.Log(2), MidpointRounding.ToEven));
+    private static byte GetBestK(uint bitsPerItem) => (byte)Math.Max(1, (int)Math.Round(bitsPerItem * Math.Log(2), MidpointRounding.AwayFromZero));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ulong GetBit(uint index) => 1UL << (int)(index & 63);
