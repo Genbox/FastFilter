@@ -42,7 +42,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
         _segmentLengthMask = _segmentLength - 1;
 
         double sizeFactor = size <= 1 ? 0 : Max(1.125, 0.875 + (0.25 * Log(1000000.0) / Log(size)));
-        uint capacity = size <= 1 ? 0 : (uint)Round(size * sizeFactor);
+        uint capacity = size <= 1 ? 0 : (uint)Round(size * sizeFactor, MidpointRounding.ToEven);
         uint initSegmentCount = ((capacity + _segmentLength - 1) / _segmentLength) - 2;
 
         _arrayLength = (initSegmentCount + 2) * _segmentLength;
