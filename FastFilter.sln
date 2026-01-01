@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32112.339
@@ -65,6 +65,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local", "Local", "{EF086041-6B4F-402E-A07E-B40E808803C7}"
 	ProjectSection(SolutionItems) = preProject
 		Locals\Directory.Build.props = Locals\Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Scripts", "_Scripts", "{BF770F6D-37F0-4431-85C9-5AD2655717A1}"
+	ProjectSection(SolutionItems) = preProject
+		Scripts\Build.ps1 = Scripts\Build.ps1
+		Scripts\Publish.ps1 = Scripts\Publish.ps1
 	EndProjectSection
 EndProject
 Global
