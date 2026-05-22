@@ -25,9 +25,11 @@ public class BlockedBloomFilter<T> : IBloomFilter<T> where T : notnull
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bitsPerKey);
 
-        int bits = capacity * bitsPerKey;
-        int buckets = bits / 64;
-        _arrayLength = (uint)(buckets + 8); //Genbox: We save the array length to avoid virtual calls to array.Length
+        long bits = (long)capacity * bitsPerKey;
+        long buckets = bits / 64;
+        long arrayLength = buckets + 8;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(arrayLength, Array.MaxLength, nameof(capacity));
+        _arrayLength = (uint)arrayLength; //Genbox: We save the array length to avoid virtual calls to array.Length
         _array = new ulong[_arrayLength];
         _seed = GetSeed();
     }

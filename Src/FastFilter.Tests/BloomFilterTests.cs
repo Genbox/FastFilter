@@ -12,6 +12,12 @@ public class BloomFilterTests(ITestOutputHelper output)
         Assert.Throws<ArgumentOutOfRangeException>(() => new BloomFilter<int>(int.MaxValue, uint.MaxValue));
     }
 
+    [Fact]
+    public void BlockedBloomFilterRejectsSizesThatOverflowBackingArrayLength()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new BlockedBloomFilter<int>(int.MaxValue, int.MaxValue));
+    }
+
     [Theory]
     [MemberData(nameof(GenerateTests))]
     public void GenericTest(IBloomFilter<long> filter, long[] values, uint size)
