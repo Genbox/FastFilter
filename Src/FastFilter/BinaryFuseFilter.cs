@@ -231,13 +231,18 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
 
             if (duplicates > 0)
             {
-                HashSet<T> uniq = new HashSet<T>(keys.Length);
+                HashSet<int> uniqueHashes = new HashSet<int>(keys.Length);
+                T[] uniqueKeys = new T[keys.Length];
+                int uniqueCount = 0;
 
                 for (int i = 0; i < keys.Length; i++)
-                    uniq.Add(keys[i]);
+                {
+                    if (uniqueHashes.Add(keys[i].GetHashCode()))
+                        uniqueKeys[uniqueCount++] = keys[i];
+                }
 
-                size = (uint)uniq.Count;
-                keys = uniq.ToArray().AsSpan(0, (int)size);
+                size = (uint)uniqueCount;
+                keys = uniqueKeys.AsSpan(0, uniqueCount);
             }
 
             Array.Clear(reverseOrder, 0, (int)size);
