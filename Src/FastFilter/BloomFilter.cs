@@ -23,8 +23,10 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bitsPerKey);
 
         _k = GetBestK(bitsPerKey);
-        uint bitCount = (uint)capacity * bitsPerKey;
-        _arrayLength = (bitCount + 63) / 64;
+        ulong bitCount = (ulong)capacity * bitsPerKey;
+        ulong arrayLength = (bitCount + 63) / 64;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(arrayLength, (ulong)Array.MaxLength, nameof(capacity));
+        _arrayLength = (uint)arrayLength;
         _array = new ulong[_arrayLength];
         _seed = GetSeed();
     }

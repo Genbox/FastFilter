@@ -6,6 +6,12 @@ namespace Genbox.FastFilter.Tests;
 
 public class BloomFilterTests(ITestOutputHelper output)
 {
+    [Fact]
+    public void BloomFilterRejectsSizesThatOverflowBackingArrayLength()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new BloomFilter<int>(int.MaxValue, uint.MaxValue));
+    }
+
     [Theory]
     [MemberData(nameof(GenerateTests))]
     public void GenericTest(IBloomFilter<long> filter, long[] values, uint size)
