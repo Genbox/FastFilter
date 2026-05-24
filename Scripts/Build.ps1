@@ -1,4 +1,16 @@
-$Config = "Debug"
-$Root = (Resolve-Path "$PSScriptRoot/..").Path
+param(
+    [ValidateSet("Debug", "Release")]
+    [string]$Config = "Debug"
+)
 
-dotnet build $Root/FastFilter.sln -c $Config
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+. "$PSScriptRoot/Common.ps1"
+
+$Root = (Resolve-Path "$PSScriptRoot/..").Path
+$Solution = "$Root/FastFilter.slnx"
+
+Invoke-DotNet restore $Solution --locked-mode
+Invoke-DotNet build $Solution -c $Config --no-restore
+Invoke-DotNet test --solution $Solution -c $Config --no-build

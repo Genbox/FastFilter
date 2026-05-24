@@ -20,6 +20,9 @@ public class BlockedBloomFilter<T> : IBloomFilter<T> where T : notnull
     private readonly uint _arrayLength;
     private readonly ulong _seed;
 
+    /// <summary>Creates an empty filter sized for the expected number of keys.</summary>
+    /// <param name="capacity">The expected number of keys.</param>
+    /// <param name="bitsPerKey">The number of bits to allocate per key.</param>
     public BlockedBloomFilter(int capacity, int bitsPerKey = 10)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
@@ -34,12 +37,16 @@ public class BlockedBloomFilter<T> : IBloomFilter<T> where T : notnull
         _seed = GetSeed();
     }
 
+    /// <summary>Creates a filter containing the supplied keys.</summary>
+    /// <param name="data">The keys to add.</param>
+    /// <param name="bitsPerKey">The number of bits to allocate per key.</param>
     public BlockedBloomFilter(ReadOnlySpan<T> data, int bitsPerKey = 10) : this(data.Length, bitsPerKey)
     {
         foreach (ref readonly T item in data)
             Add(item);
     }
 
+    /// <inheritdoc />
     public void Add(T key)
     {
         ulong hash = MixSplit(key.GetHashCode(), _seed);
@@ -50,6 +57,7 @@ public class BlockedBloomFilter<T> : IBloomFilter<T> where T : notnull
         _array[idx] |= m;
     }
 
+    /// <inheritdoc />
     public bool Contains(T key)
     {
         ulong hash = MixSplit(key.GetHashCode(), _seed);
@@ -61,7 +69,9 @@ public class BlockedBloomFilter<T> : IBloomFilter<T> where T : notnull
         return (m & bucket) == m;
     }
 
+    /// <inheritdoc />
     public uint GetMemoryUsage() => (_arrayLength * sizeof(ulong)) + (uint)Unsafe.SizeOf<BlockedBloomFilter<T>>();
 
+    /// <inheritdoc />
     public override string ToString() => "BlockedBloomFilter";
 }

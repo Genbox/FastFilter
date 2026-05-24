@@ -29,9 +29,11 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
     private readonly uint _arrayLength;
     private readonly T2[] _fingerprints;
 
+    /// <summary>Creates an immutable filter containing the supplied keys.</summary>
+    /// <param name="data">The keys to add.</param>
     protected BinaryFuseFilter(ReadOnlySpan<T> data)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(data.Length);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(data.Length, nameof(data));
 
         uint size = (uint)data.Length;
 
@@ -62,10 +64,13 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
         Populate(data);
     }
 
+    /// <inheritdoc />
     public uint GetMemoryUsage() => (_arrayLength * (uint)Unsafe.SizeOf<T2>()) + (uint)Unsafe.SizeOf<BinaryFuseFilter<T, T2>>();
 
+    /// <inheritdoc />
     public void Add(T key) => throw new NotSupportedException("Not possible to add items after the initial construction");
 
+    /// <inheritdoc />
     public bool Contains(T key)
     {
         ulong hash = MixSplit(key.GetHashCode(), _seed);
@@ -78,7 +83,6 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
         h1 ^= (uint)(hash >> 18) & _segmentLengthMask;
         h2 ^= (uint)hash & _segmentLengthMask;
 
-        //TODO: Not using checked faster?
         f ^= T2.CreateChecked(_fingerprints[h0]) ^ T2.CreateChecked(_fingerprints[h1]) ^ T2.CreateChecked(_fingerprints[h2]);
         return f == T2.Zero;
     }
@@ -145,20 +149,18 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
                 t2Hash[h2] ^= hash;
                 t2Count[h2] ^= 2;
 
-                if ((t2Hash[h0] & t2Hash[h1] & t2Hash[h2]) == 0)
+                if ((t2Hash[h0] & t2Hash[h1] & t2Hash[h2]) == 0 &&
+                    ((t2Hash[h0] == 0 && t2Count[h0] == 8) || (t2Hash[h1] == 0 && t2Count[h1] == 8) || (t2Hash[h2] == 0 && t2Count[h2] == 8)))
                 {
-                    if ((t2Hash[h0] == 0 && t2Count[h0] == 8) || (t2Hash[h1] == 0 && t2Count[h1] == 8) || (t2Hash[h2] == 0 && t2Count[h2] == 8))
-                    {
-                        duplicates++;
-                        t2Count[h0] -= 4;
-                        t2Hash[h0] ^= hash;
-                        t2Count[h1] -= 4;
-                        t2Count[h1] ^= 1;
-                        t2Hash[h1] ^= hash;
-                        t2Count[h2] -= 4;
-                        t2Count[h2] ^= 2;
-                        t2Hash[h2] ^= hash;
-                    }
+                    duplicates++;
+                    t2Count[h0] -= 4;
+                    t2Hash[h0] ^= hash;
+                    t2Count[h1] -= 4;
+                    t2Count[h1] ^= 1;
+                    t2Hash[h1] ^= hash;
+                    t2Count[h2] -= 4;
+                    t2Count[h2] ^= 2;
+                    t2Hash[h2] ^= hash;
                 }
 
                 error = t2Count[h0] < 4 ? 1 : error;
@@ -254,8 +256,9 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
         if (!success)
             throw new InvalidOperationException("Failed to construct binary fuse filter within the iteration limit.");
 
-        for (uint i = size - 1; i < size; i--)
+        for (uint remaining = size; remaining > 0; remaining--)
         {
+            uint i = remaining - 1;
             // the hash of the key we insert next
             ulong hash = reverseOrder[i];
             T2 xor2 = Fingerprint(hash);
@@ -290,5 +293,6 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ulong MulHi(ulong a, ulong b) => BigMul(a, b, out _);
 
+    /// <inheritdoc />
     public override string ToString() => $"BinaryFuse{Unsafe.SizeOf<T2>() * 8}Filter";
 }

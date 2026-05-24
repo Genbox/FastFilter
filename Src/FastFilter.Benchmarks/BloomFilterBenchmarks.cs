@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Order;
 using Genbox.FastFilter.Abstracts;
 
@@ -15,9 +15,9 @@ public class BloomFilterBenchmarks
     public bool Contains() => Filter.Contains(824);
 
     [ParamsSource(nameof(BuildBloomFilters))]
-    public IBloomFilter<long> Filter { get; set; }
+    public IBloomFilter<long> Filter { get; set; } = null!;
 
-    public IEnumerable<IBloomFilter<long>> BuildBloomFilters()
+    public static IEnumerable<IBloomFilter<long>> BuildBloomFilters()
     {
         long[] values = new long[1000];
 
@@ -31,12 +31,12 @@ public class BloomFilterBenchmarks
         yield return new HashSetBloomFilter<long>(values);
     }
 
-    private class HashSetBloomFilter<T>(IEnumerable<T> values) : IBloomFilter<T> where T : notnull
+    private sealed class HashSetBloomFilter<T>(IEnumerable<T> values) : IBloomFilter<T> where T : notnull
     {
         private readonly HashSet<T> _set = new HashSet<T>(values);
 
         public void Add(T item) => _set.Add(item);
         public bool Contains(T item) => _set.Contains(item);
-        public uint GetMemoryUsage() => throw new NotImplementedException();
+        public uint GetMemoryUsage() => throw new NotSupportedException();
     }
 }

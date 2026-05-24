@@ -1,9 +1,11 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using Genbox.FastFilter.Abstracts;
 using static Genbox.FastFilter.Internals.Common;
 
 namespace Genbox.FastFilter;
 
+/// <summary>A Bloom filter with a configurable number of bits per key.</summary>
+/// <typeparam name="T">The type of keys stored in the filter.</typeparam>
 public class BloomFilter<T> : IBloomFilter<T> where T : notnull
 {
     // A simple Bloom filter. It uses k number of hash functions.
@@ -17,6 +19,9 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
     private readonly byte _k;
     private readonly ulong _seed;
 
+    /// <summary>Creates an empty filter sized for the expected number of keys.</summary>
+    /// <param name="capacity">The expected number of keys.</param>
+    /// <param name="bitsPerKey">The number of bits to allocate per key.</param>
     public BloomFilter(int capacity, uint bitsPerKey = 8)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
@@ -31,12 +36,16 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
         _seed = GetSeed();
     }
 
+    /// <summary>Creates a filter containing the supplied keys.</summary>
+    /// <param name="data">The keys to add.</param>
+    /// <param name="bitsPerKey">The number of bits to allocate per key.</param>
     public BloomFilter(ReadOnlySpan<T> data, uint bitsPerKey = 8) : this(data.Length, bitsPerKey)
     {
         foreach (ref readonly T item in data)
             Add(item);
     }
 
+    /// <inheritdoc />
     public void Add(T key)
     {
         ulong hash = MixSplit(key.GetHashCode(), _seed);
@@ -50,6 +59,7 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
         }
     }
 
+    /// <inheritdoc />
     public bool Contains(T key)
     {
         ulong hash = MixSplit(key.GetHashCode(), _seed);
@@ -68,8 +78,10 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
         return true;
     }
 
+    /// <inheritdoc />
     public uint GetMemoryUsage() => (_arrayLength * sizeof(ulong)) + (uint)Unsafe.SizeOf<BloomFilter<T>>();
 
+    /// <inheritdoc />
     public override string ToString() => "BloomFilter";
 
     private static byte GetBestK(uint bitsPerItem) => (byte)Math.Max(1, (int)Math.Round(bitsPerItem * Math.Log(2), MidpointRounding.AwayFromZero));

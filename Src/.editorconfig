@@ -1,0 +1,11 @@
+# Filter seeds distribute hashes; they do not protect secrets.
+[FastFilter/{BinaryFuseFilter.cs,Internals/Common.cs}]
+dotnet_diagnostic.CA5394.severity = none
+
+# The example generates sample keys, not security-sensitive values.
+[FastFilter.Examples/Program.cs]
+dotnet_diagnostic.CA5394.severity = none
+
+# xUnit supplies the non-null theory data defined by these tests.
+[FastFilter.Tests/**.cs]
+dotnet_diagnostic.CA1062.severity = none
