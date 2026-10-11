@@ -2,7 +2,7 @@ using Genbox.FastFilter.Abstracts;
 
 namespace Genbox.FastFilter.Tests;
 
-public class BloomFilterTests(ITestOutputHelper output)
+public class BloomFilterTests
 {
     [Fact]
     public void BloomFilterRejectsSizesThatOverflowBackingArrayLength() => Assert.Throws<ArgumentOutOfRangeException>(() => new BloomFilter<int>(int.MaxValue, uint.MaxValue));
@@ -15,37 +15,15 @@ public class BloomFilterTests(ITestOutputHelper output)
 
     [Theory]
     [MemberData(nameof(GenerateTests))]
-    public void GenericTest(IBloomFilter<long> filter, long[] values, uint size)
+    public void ContainsInsertedKeys(IBloomFilter<long> filter, long[] values)
     {
-        for (uint i = 0; i < size; i++)
-            Assert.True(filter.Contains(values[i]));
-
-        uint randomMatches = 0;
-        const uint trials = 10_000_000;
-
-        for (uint i = 0; i < trials; i++)
-        {
-            long randomKey = Random.Shared.NextInt64();
-
-            if (!filter.Contains(randomKey))
-                continue;
-
-            if (randomKey >= size)
-                randomMatches++;
-        }
-
-        double fpp = randomMatches / (double)trials;
-        output.WriteLine($"False positive: {fpp * 100:N5}%");
-        uint mem = filter.GetMemoryUsage();
-        output.WriteLine($"Total memory usage: {mem:N0} bytes");
-        double bpe = (mem * 8.0) / size;
-        output.WriteLine($"Bits per entry: {bpe}");
-        output.WriteLine($"Efficiency ratio: {bpe / (-Math.Log(fpp) / Math.Log(2))}");
+        foreach (long value in values)
+            Assert.True(filter.Contains(value));
     }
 
-    public static TheoryData<IBloomFilter<long>, long[], uint> GenerateTests()
+    public static TheoryData<IBloomFilter<long>, long[]> GenerateTests()
     {
-        TheoryData<IBloomFilter<long>, long[], uint> data = new TheoryData<IBloomFilter<long>, long[], uint>();
+        TheoryData<IBloomFilter<long>, long[]> data = new TheoryData<IBloomFilter<long>, long[]>();
 
         //1 is to check special cases
         uint[] sizes = [1, 1000, 10000, 100000, 1000000];
@@ -57,10 +35,10 @@ public class BloomFilterTests(ITestOutputHelper output)
             for (long i = 0; i < size; i++)
                 values[i] = i;
 
-            data.Add(new BinaryFuse8Filter<long>(values), values, size);
-            data.Add(new BinaryFuse16Filter<long>(values), values, size);
-            data.Add(new BloomFilter<long>(values), values, size);
-            data.Add(new BlockedBloomFilter<long>(values), values, size);
+            data.Add(new BinaryFuse8Filter<long>(values), values);
+            data.Add(new BinaryFuse16Filter<long>(values), values);
+            data.Add(new BloomFilter<long>(values), values);
+            data.Add(new BlockedBloomFilter<long>(values), values);
         }
 
         return data;

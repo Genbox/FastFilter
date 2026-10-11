@@ -11,28 +11,24 @@ internal static class Program
 
         int[] data = Enumerable.Range(0, size).ToArray();
 
-        BloomFilter<int> bf = new BloomFilter<int>(data);
-        Console.WriteLine("# BloomFilter");
-        Console.WriteLine($"Memory: {bf.GetMemoryUsage():N0} bytes");
-        Console.WriteLine($"False positives: {ComputeFalsePositiveRate(bf, data.Length, trials):P5}");
-        Console.WriteLine();
+        PrintStatistics(new BloomFilter<int>(data), size, trials);
+        PrintStatistics(new BinaryFuse8Filter<int>(data), size, trials);
+        PrintStatistics(new BinaryFuse16Filter<int>(data), size, trials);
+        PrintStatistics(new BlockedBloomFilter<int>(data), size, trials);
+    }
 
-        BinaryFuse8Filter<int> fuse8 = new BinaryFuse8Filter<int>(data);
-        Console.WriteLine("# BinaryFuse8Filter");
-        Console.WriteLine($"Memory: {fuse8.GetMemoryUsage():N0} bytes");
-        Console.WriteLine($"False positives: {ComputeFalsePositiveRate(fuse8, data.Length, trials):P5}");
-        Console.WriteLine();
+    private static void PrintStatistics(IBloomFilter<int> filter, int size, int trials)
+    {
+        uint memory = filter.GetMemoryUsage();
+        double falsePositiveRate = ComputeFalsePositiveRate(filter, size, trials);
+        double bitsPerEntry = (memory * 8.0) / size;
 
-        BinaryFuse16Filter<int> fuse16 = new BinaryFuse16Filter<int>(data);
-        Console.WriteLine("# BinaryFuse16Filter");
-        Console.WriteLine($"Memory: {fuse16.GetMemoryUsage():N0} bytes");
-        Console.WriteLine($"False positives: {ComputeFalsePositiveRate(fuse16, data.Length, trials):P5}");
+        Console.WriteLine($"# {filter}");
+        Console.WriteLine($"Memory: {memory:N0} bytes");
+        Console.WriteLine($"False positives: {falsePositiveRate:P5}");
+        Console.WriteLine($"Bits per entry: {bitsPerEntry}");
+        Console.WriteLine($"Efficiency ratio: {bitsPerEntry / (-Math.Log(falsePositiveRate) / Math.Log(2))}");
         Console.WriteLine();
-
-        BlockedBloomFilter<int> blocked = new BlockedBloomFilter<int>(data);
-        Console.WriteLine("# BlockedBloomFilter");
-        Console.WriteLine($"Memory: {blocked.GetMemoryUsage():N0} bytes");
-        Console.WriteLine($"False positives: {ComputeFalsePositiveRate(blocked, data.Length, trials):P5}");
     }
 
     private static double ComputeFalsePositiveRate(IBloomFilter<int> filter, int size, int trials)
@@ -43,10 +39,7 @@ internal static class Program
         {
             int randomKey = Random.Shared.Next();
 
-            if (!filter.Contains(randomKey))
-                continue;
-
-            if (randomKey >= size)
+            if (filter.Contains(randomKey) && randomKey >= size)
                 falsePositives++;
         }
 
