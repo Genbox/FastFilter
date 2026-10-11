@@ -8,14 +8,14 @@ namespace Genbox.FastFilter.Benchmarks;
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 public class BloomFilterBenchmarks
 {
+    [ParamsSource(nameof(BuildBloomFilters))]
+    public IBloomFilter<long> Filter { get; set; } = null!;
+
     [Benchmark]
     public void Add() => Filter.Add(824);
 
     [Benchmark]
     public bool Contains() => Filter.Contains(824);
-
-    [ParamsSource(nameof(BuildBloomFilters))]
-    public IBloomFilter<long> Filter { get; set; } = null!;
 
     public static IEnumerable<IBloomFilter<long>> BuildBloomFilters()
     {

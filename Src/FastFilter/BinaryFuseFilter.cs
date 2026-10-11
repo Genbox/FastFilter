@@ -7,7 +7,7 @@ using static Genbox.FastFilter.Internals.Common;
 namespace Genbox.FastFilter;
 
 /// <summary>
-/// A generic variant of the binary fuse filter. Only for advanced use-cases such as 32/64bit binary fuse filters. Use <see cref="BinaryFuse8Filter{T}"/> or <see cref="BinaryFuse16Filter{T}"/> instead.
+/// A generic variant of the binary fuse filter. Only for advanced use-cases such as 32/64bit binary fuse filters. Use <see cref="BinaryFuse8Filter{T}" /> or <see cref="BinaryFuse16Filter{T}" /> instead.
 /// </summary>
 public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T2 : INumberBase<T2>, IBitwiseOperators<T2, T2, T2>
 {
@@ -20,14 +20,14 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
     // - Source code: https://github.com/FastFilter/fastfilter_cpp/
 
     private const uint XorMaxIterations = 100; // probability of success should always be > 0.5 so 100 iterations is highly unlikely
-
-    private ulong _seed;
-    private readonly uint _segmentLength;
-    private readonly uint _segmentLengthMask;
-    private readonly uint _segmentCount;
-    private readonly uint _segmentCountLength;
     private readonly uint _arrayLength;
     private readonly T2[] _fingerprints;
+    private readonly uint _segmentCount;
+    private readonly uint _segmentCountLength;
+    private readonly uint _segmentLength;
+    private readonly uint _segmentLengthMask;
+
+    private ulong _seed;
 
     /// <summary>Creates an immutable filter containing the supplied keys.</summary>
     /// <param name="data">The keys to add.</param>
@@ -45,12 +45,12 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
 
         _segmentLengthMask = _segmentLength - 1;
 
-        double sizeFactor = size <= 1 ? 0 : Max(1.125, 0.875 + (0.25 * Log(1000000.0) / Log(size)));
+        double sizeFactor = size <= 1 ? 0 : Max(1.125, 0.875 + ((0.25 * Log(1000000.0)) / Log(size)));
         uint capacity = size <= 1 ? 0 : (uint)Round(size * sizeFactor, MidpointRounding.AwayFromZero);
-        uint initSegmentCount = ((capacity + _segmentLength - 1) / _segmentLength) - 2;
+        uint initSegmentCount = (((capacity + _segmentLength) - 1) / _segmentLength) - 2;
 
         _arrayLength = (initSegmentCount + 2) * _segmentLength;
-        _segmentCount = (_arrayLength + _segmentLength - 1) / _segmentLength;
+        _segmentCount = ((_arrayLength + _segmentLength) - 1) / _segmentLength;
 
         if (_segmentCount <= 2)
             _segmentCount = 1;
@@ -108,6 +108,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
 
         reverseOrder[size] = 1;
         bool success = false;
+
         for (int loop = 0; loop < XorMaxIterations; ++loop)
         {
             // The probability of this happening is lower than the cosmic-ray probability (i.e., a cosmic ray corrupts your system)
@@ -119,21 +120,25 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
                 startPos[i] = (uint)((ulong)i * size) >> blockBits;
 
             ulong maskblock = block - 1;
+
             for (int i = 0; i < size; i++) //Genbox: Switched to int here to avoid cast in array indexer below
             {
                 ulong hash = MixSplit(keys[i].GetHashCode(), _seed);
                 ulong segmentIndex = hash >> (64 - blockBits);
+
                 while (reverseOrder[startPos[segmentIndex]] != 0)
                 {
                     segmentIndex++;
                     segmentIndex &= maskblock;
                 }
+
                 reverseOrder[startPos[segmentIndex]] = hash;
                 startPos[segmentIndex]++;
             }
 
             int error = 0;
             uint duplicates = 0;
+
             for (uint i = 0; i < size; i++)
             {
                 ulong hash = reverseOrder[i];
@@ -188,10 +193,12 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
             }
 
             uint stackSize = 0;
+
             while (qsize > 0)
             {
                 qsize--;
                 uint index = alone[qsize];
+
                 if (t2Count[index] >> 2 == 1)
                 {
                     ulong hash = t2Hash[index];
@@ -259,6 +266,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
         for (uint remaining = size; remaining > 0; remaining--)
         {
             uint i = remaining - 1;
+
             // the hash of the key we insert next
             ulong hash = reverseOrder[i];
             T2 xor2 = Fingerprint(hash);
@@ -280,8 +288,10 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
     {
         ulong h = MulHi(hash, segmentCountLength);
         h += (ulong)index * segmentLength;
+
         // keep the lower 36 bits
         ulong hh = hash & ((1UL << 36) - 1);
+
         // index 0: right shift by 36; index 1: right shift by 18; index 2: no shift
         h ^= (hh >> (36 - (18 * index))) & segmentLengthMask;
         return (uint)h;

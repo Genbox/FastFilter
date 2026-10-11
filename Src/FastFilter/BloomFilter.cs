@@ -87,6 +87,7 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
     private static byte GetBestK(uint bitsPerItem)
     {
         double bestK = Math.Round(bitsPerItem * Math.Log(2), MidpointRounding.AwayFromZero);
+
         // DPR-029: prevent the probe count from wrapping the backing byte to zero.
         ArgumentOutOfRangeException.ThrowIfGreaterThan(bestK, byte.MaxValue, nameof(bitsPerItem));
         return (byte)Math.Max(1, (int)bestK);

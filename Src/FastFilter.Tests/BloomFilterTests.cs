@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Genbox.FastFilter.Abstracts;
 
 namespace Genbox.FastFilter.Tests;
@@ -7,22 +5,13 @@ namespace Genbox.FastFilter.Tests;
 public class BloomFilterTests(ITestOutputHelper output)
 {
     [Fact]
-    public void BloomFilterRejectsSizesThatOverflowBackingArrayLength()
-    {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new BloomFilter<int>(int.MaxValue, uint.MaxValue));
-    }
+    public void BloomFilterRejectsSizesThatOverflowBackingArrayLength() => Assert.Throws<ArgumentOutOfRangeException>(() => new BloomFilter<int>(int.MaxValue, uint.MaxValue));
 
     [Fact]
-    public void BloomFilterRejectsBitsPerKeyThatOverflowProbeCount()
-    {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new BloomFilter<int>(1, 369));
-    }
+    public void BloomFilterRejectsBitsPerKeyThatOverflowProbeCount() => Assert.Throws<ArgumentOutOfRangeException>(() => new BloomFilter<int>(1, 369));
 
     [Fact]
-    public void BlockedBloomFilterRejectsSizesThatOverflowBackingArrayLength()
-    {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new BlockedBloomFilter<int>(int.MaxValue, int.MaxValue));
-    }
+    public void BlockedBloomFilterRejectsSizesThatOverflowBackingArrayLength() => Assert.Throws<ArgumentOutOfRangeException>(() => new BlockedBloomFilter<int>(int.MaxValue, int.MaxValue));
 
     [Theory]
     [MemberData(nameof(GenerateTests))]
@@ -49,7 +38,7 @@ public class BloomFilterTests(ITestOutputHelper output)
         output.WriteLine($"False positive: {fpp * 100:N5}%");
         uint mem = filter.GetMemoryUsage();
         output.WriteLine($"Total memory usage: {mem:N0} bytes");
-        double bpe = mem * 8.0 / size;
+        double bpe = (mem * 8.0) / size;
         output.WriteLine($"Bits per entry: {bpe}");
         output.WriteLine($"Efficiency ratio: {bpe / (-Math.Log(fpp) / Math.Log(2))}");
     }

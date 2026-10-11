@@ -13,8 +13,8 @@ FastFilter is a C# implementation of a few different Bloom filters with focus on
 
 ### Features
 
-* Add()
-* Contains()
+* Add ()
+* Contains ()
 
 ### Example
 
