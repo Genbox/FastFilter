@@ -96,7 +96,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
 
         uint block = 1U << blockBits;
         uint[] startPos = new uint[block];
-        uint[] h012 = new uint[5];
+        Span<uint> h012 = stackalloc uint[5];
 
         reverseOrder[size] = 1;
         bool success = false;
@@ -162,8 +162,8 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
             if (error)
             {
                 Array.Clear(reverseOrder, 0, (int)size);
-                Array.Clear(t2Count, 0, (int)_arrayLength);
-                Array.Clear(t2Hash, 0, (int)_arrayLength);
+                Array.Clear(t2Count);
+                Array.Clear(t2Hash);
                 _seed = GetSeed();
                 continue;
             }
@@ -240,8 +240,8 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
             }
 
             Array.Clear(reverseOrder, 0, (int)size);
-            Array.Clear(t2Count, 0, (int)_arrayLength);
-            Array.Clear(t2Hash, 0, (int)_arrayLength);
+            Array.Clear(t2Count);
+            Array.Clear(t2Hash);
             _seed = (ulong)Random.Shared.NextInt64();
         }
 
