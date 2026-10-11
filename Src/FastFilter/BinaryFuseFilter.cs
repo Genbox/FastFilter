@@ -85,7 +85,7 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
         ulong hash = MixSplit(key.GetHashCode(), _seed);
         T2 f = Fingerprint(hash);
 
-        uint h0 = (uint)MulHi(hash, _segmentCountLength);
+        uint h0 = (uint)BigMul(hash, _segmentCountLength, out _);
         uint h1 = h0 + _segmentLength;
         uint h2 = h1 + _segmentLength;
 
@@ -107,11 +107,8 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
         byte[] reverseH = new byte[size];
         ulong[] t2Hash = new ulong[_arrayLength];
 
-        int blockBits = 1;
-        while (1U << blockBits < segmentCount)
-            blockBits++;
-
-        uint block = 1U << blockBits;
+        uint block = BitOperations.RoundUpToPowerOf2(Max(2U, segmentCount));
+        int blockBits = BitOperations.Log2(block);
         uint[] startPos = new uint[block];
         Span<uint> h012 = stackalloc uint[5];
 
@@ -288,7 +285,7 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private uint Hash(int index, ulong hash)
     {
-        ulong h = MulHi(hash, _segmentCountLength);
+        ulong h = BigMul(hash, _segmentCountLength, out _);
         h += (ulong)index * _segmentLength;
 
         // keep the lower 36 bits
@@ -301,9 +298,6 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static T2 Fingerprint(ulong hash) => T2.CreateTruncating(hash ^ (hash >> 32));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ulong MulHi(ulong a, ulong b) => BigMul(a, b, out _);
 
     /// <inheritdoc />
     public override string ToString() => $"BinaryFuse{Unsafe.SizeOf<T2>() * 8}Filter";

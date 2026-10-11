@@ -71,10 +71,8 @@ public class BlockedBloomFilter<T> : IFilter<T> where T : notnull
     {
         ulong hash = MixSplit(key.GetHashCode(), _seed);
         ulong idx = FastRange32((uint)hash, _arrayLength);
-        ulong m1 = 1UL << (int)hash;
-        ulong m2 = 1UL << (int)(hash >> 8);
-        ulong m = m1 | m2;
-        _array[idx] |= m;
+        ulong mask = GetMask(hash);
+        _array[idx] |= mask;
     }
 
     /// <inheritdoc />
@@ -82,12 +80,13 @@ public class BlockedBloomFilter<T> : IFilter<T> where T : notnull
     {
         ulong hash = MixSplit(key.GetHashCode(), _seed);
         ulong idx = FastRange32((uint)hash, _arrayLength);
-        ulong m1 = 1UL << (int)hash;
-        ulong m2 = 1UL << (int)(hash >> 8);
-        ulong m = m1 | m2;
+        ulong mask = GetMask(hash);
         ulong bucket = _array[idx];
-        return (m & bucket) == m;
+        return (mask & bucket) == mask;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ulong GetMask(ulong hash) => (1UL << (int)hash) | (1UL << (int)(hash >> 8));
 
     /// <inheritdoc />
     public uint GetMemoryUsage() => (_arrayLength * sizeof(ulong)) + (uint)Unsafe.SizeOf<BlockedBloomFilter<T>>();
