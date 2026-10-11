@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Genbox.FastFilter.Abstracts;
 using static Genbox.FastFilter.Internals.Common;
@@ -49,7 +50,7 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
     public void Add(T key)
     {
         ulong hash = MixSplit(key.GetHashCode(), _seed);
-        ulong a = (hash >> 32) | (hash << 32);
+        ulong a = BitOperations.RotateLeft(hash, 32);
 
         for (int i = 0; i < _k; i++)
         {
@@ -63,7 +64,7 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
     public bool Contains(T key)
     {
         ulong hash = MixSplit(key.GetHashCode(), _seed);
-        ulong a = (hash >> 32) | (hash << 32);
+        ulong a = BitOperations.RotateLeft(hash, 32);
 
         for (int i = 0; i < _k; i++)
         {
