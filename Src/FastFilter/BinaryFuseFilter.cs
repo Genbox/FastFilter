@@ -75,7 +75,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
         h1 ^= (uint)(hash >> 18) & _segmentLengthMask;
         h2 ^= (uint)hash & _segmentLengthMask;
 
-        f ^= T2.CreateChecked(_fingerprints[h0]) ^ T2.CreateChecked(_fingerprints[h1]) ^ T2.CreateChecked(_fingerprints[h2]);
+        f ^= _fingerprints[h0] ^ _fingerprints[h1] ^ _fingerprints[h2];
         return f == T2.Zero;
     }
 
@@ -134,14 +134,14 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
             for (uint i = 0; i < size; i++)
             {
                 ulong hash = reverseOrder[i];
-                uint h0 = Hash(0, hash, _segmentCountLength, _segmentLength, _segmentLengthMask);
+                uint h0 = Hash(0, hash);
                 t2Count[h0] += 4;
                 t2Hash[h0] ^= hash;
-                uint h1 = Hash(1, hash, _segmentCountLength, _segmentLength, _segmentLengthMask);
+                uint h1 = Hash(1, hash);
                 t2Count[h1] += 4;
                 t2Count[h1] ^= 1;
                 t2Hash[h1] ^= hash;
-                uint h2 = Hash(2, hash, _segmentCountLength, _segmentLength, _segmentLengthMask);
+                uint h2 = Hash(2, hash);
                 t2Count[h2] += 4;
                 t2Hash[h2] ^= hash;
                 t2Count[h2] ^= 2;
@@ -196,9 +196,9 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
                     ulong hash = t2Hash[index];
 
                     //h012[0] = binary_fuse8_hash(0, hash, filter);
-                    h012[1] = Hash(1, hash, _segmentCountLength, _segmentLength, _segmentLengthMask);
-                    h012[2] = Hash(2, hash, _segmentCountLength, _segmentLength, _segmentLengthMask);
-                    h012[3] = Hash(0, hash, _segmentCountLength, _segmentLength, _segmentLengthMask);
+                    h012[1] = Hash(1, hash);
+                    h012[2] = Hash(2, hash);
+                    h012[3] = Hash(0, hash);
                     h012[4] = h012[1];
 
                     byte found = (byte)(t2Count[index] & 3);
@@ -263,9 +263,9 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
             ulong hash = reverseOrder[i];
             T2 xor2 = Fingerprint(hash);
             byte found = reverseH[i];
-            h012[0] = Hash(0, hash, _segmentCountLength, _segmentLength, _segmentLengthMask);
-            h012[1] = Hash(1, hash, _segmentCountLength, _segmentLength, _segmentLengthMask);
-            h012[2] = Hash(2, hash, _segmentCountLength, _segmentLength, _segmentLengthMask);
+            h012[0] = Hash(0, hash);
+            h012[1] = Hash(1, hash);
+            h012[2] = Hash(2, hash);
             h012[3] = h012[0];
             h012[4] = h012[1];
             _fingerprints[h012[found]] = xor2 ^ _fingerprints[h012[found + 1]] ^ _fingerprints[h012[found + 2]];
@@ -276,16 +276,16 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
     private static byte Mod3(byte x) => x > 2 ? (byte)(x - 3) : x;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint Hash(int index, ulong hash, uint segmentCountLength, uint segmentLength, uint segmentLengthMask)
+    private uint Hash(int index, ulong hash)
     {
-        ulong h = MulHi(hash, segmentCountLength);
-        h += (ulong)index * segmentLength;
+        ulong h = MulHi(hash, _segmentCountLength);
+        h += (ulong)index * _segmentLength;
 
         // keep the lower 36 bits
         ulong hh = hash & ((1UL << 36) - 1);
 
         // index 0: right shift by 36; index 1: right shift by 18; index 2: no shift
-        h ^= (hh >> (36 - (18 * index))) & segmentLengthMask;
+        h ^= (hh >> (36 - (18 * index))) & _segmentLengthMask;
         return (uint)h;
     }
 
