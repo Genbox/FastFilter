@@ -84,7 +84,13 @@ public class BloomFilter<T> : IBloomFilter<T> where T : notnull
     /// <inheritdoc />
     public override string ToString() => "BloomFilter";
 
-    private static byte GetBestK(uint bitsPerItem) => (byte)Math.Max(1, (int)Math.Round(bitsPerItem * Math.Log(2), MidpointRounding.AwayFromZero));
+    private static byte GetBestK(uint bitsPerItem)
+    {
+        double bestK = Math.Round(bitsPerItem * Math.Log(2), MidpointRounding.AwayFromZero);
+        // DPR-029: prevent the probe count from wrapping the backing byte to zero.
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(bestK, byte.MaxValue, nameof(bitsPerItem));
+        return (byte)Math.Max(1, (int)bestK);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ulong GetBit(uint index) => 1UL << (int)(index & 63);

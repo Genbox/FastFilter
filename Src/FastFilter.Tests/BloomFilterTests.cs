@@ -13,6 +13,12 @@ public class BloomFilterTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void BloomFilterRejectsBitsPerKeyThatOverflowProbeCount()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new BloomFilter<int>(1, 369));
+    }
+
+    [Fact]
     public void BlockedBloomFilterRejectsSizesThatOverflowBackingArrayLength()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new BlockedBloomFilter<int>(int.MaxValue, int.MaxValue));
