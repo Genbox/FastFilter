@@ -5,12 +5,6 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="BinaryFuse8.cs" />
-    <Compile Remove="BinaryFuse16.cs" />
-  </ItemGroup>
 
 </Project>
