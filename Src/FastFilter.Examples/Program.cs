@@ -17,7 +17,7 @@ internal static class Program
         PrintStatistics(new BlockedBloomFilter<int>(data), size, trials);
     }
 
-    private static void PrintStatistics(IBloomFilter<int> filter, int size, int trials)
+    private static void PrintStatistics(ImmutableFilter<int> filter, int size, int trials)
     {
         uint memory = filter.GetMemoryUsage();
         double falsePositiveRate = ComputeFalsePositiveRate(filter, size, trials);
@@ -31,7 +31,7 @@ internal static class Program
         Console.WriteLine();
     }
 
-    private static double ComputeFalsePositiveRate(IBloomFilter<int> filter, int size, int trials)
+    private static double ComputeFalsePositiveRate(ImmutableFilter<int> filter, int size, int trials)
     {
         int falsePositives = 0;
 

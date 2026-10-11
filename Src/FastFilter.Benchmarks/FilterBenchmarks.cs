@@ -6,10 +6,10 @@ namespace Genbox.FastFilter.Benchmarks;
 
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByMethod)]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-public class BloomFilterBenchmarks
+public class FilterBenchmarks
 {
     [ParamsSource(nameof(BuildBloomFilters))]
-    public IBloomFilter<long> Filter { get; set; } = null!;
+    public IFilter<long> Filter { get; set; } = null!;
 
     [Benchmark]
     public void Add() => Filter.Add(824);
@@ -17,7 +17,7 @@ public class BloomFilterBenchmarks
     [Benchmark]
     public bool Contains() => Filter.Contains(824);
 
-    public static IEnumerable<IBloomFilter<long>> BuildBloomFilters()
+    public static IEnumerable<IFilter<long>> BuildBloomFilters()
     {
         long[] values = new long[1000];
 
@@ -28,14 +28,13 @@ public class BloomFilterBenchmarks
         yield return new BlockedBloomFilter<long>(values);
         yield return new BinaryFuse8Filter<long>(values);
         yield return new BinaryFuse16Filter<long>(values);
-        yield return new HashSetBloomFilter<long>(values);
+        yield return new HashSetFilter<long>(values);
     }
 
-    private sealed class HashSetBloomFilter<T>(IEnumerable<T> values) : IBloomFilter<T> where T : notnull
+    private sealed class HashSetFilter<T>(IEnumerable<T> values) : ImmutableFilter<T> where T : notnull
     {
         private readonly HashSet<T> _set = new HashSet<T>(values);
 
-        public void Add(T item) => _set.Add(item);
         public bool Contains(T item) => _set.Contains(item);
         public uint GetMemoryUsage() => throw new NotSupportedException();
     }

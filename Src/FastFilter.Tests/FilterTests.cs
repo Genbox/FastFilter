@@ -2,7 +2,7 @@ using Genbox.FastFilter.Abstracts;
 
 namespace Genbox.FastFilter.Tests;
 
-public class BloomFilterTests
+public class FilterTests
 {
     [Fact]
     public void BloomFilterRejectsSizesThatOverflowBackingArrayLength() => Assert.Throws<ArgumentOutOfRangeException>(() => new BloomFilter<int>(int.MaxValue, uint.MaxValue));
@@ -15,15 +15,15 @@ public class BloomFilterTests
 
     [Theory]
     [MemberData(nameof(GenerateTests))]
-    public void ContainsInsertedKeys(IBloomFilter<long> filter, long[] values)
+    public void ContainsInsertedKeys(ImmutableFilter<long> filter, long[] values)
     {
         foreach (long value in values)
             Assert.True(filter.Contains(value));
     }
 
-    public static TheoryData<IBloomFilter<long>, long[]> GenerateTests()
+    public static TheoryData<ImmutableFilter<long>, long[]> GenerateTests()
     {
-        TheoryData<IBloomFilter<long>, long[]> data = new TheoryData<IBloomFilter<long>, long[]>();
+        TheoryData<ImmutableFilter<long>, long[]> data = new TheoryData<ImmutableFilter<long>, long[]>();
 
         //1 is to check special cases
         uint[] sizes = [1, 1000, 10000, 100000, 1000000];

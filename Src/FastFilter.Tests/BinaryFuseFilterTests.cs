@@ -16,6 +16,6 @@ public class BinaryFuseFilterTests
 
     private readonly record struct CollidingKey(int Value)
     {
-        public override int GetHashCode() => 42;
+        public override int GetHashCode() => Value;
     }
 }

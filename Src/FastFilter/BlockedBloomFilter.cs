@@ -7,7 +7,7 @@ namespace Genbox.FastFilter;
 /// <summary>
 /// Much faster than an ordinary Bloom filter. False-positive rate is comparable (within 1%) if you set bitsPerKey to +2 compared to Bloom filters.
 /// </summary>
-public class BlockedBloomFilter<T> : IBloomFilter<T> where T : notnull
+public class BlockedBloomFilter<T> : IFilter<T> where T : notnull
 {
     // This is a Register Blocked Bloom filter. It performs all the computation inside a single 64bit register.
     // Blocked Bloom filters have great cache locality because they write within a single cache-line.

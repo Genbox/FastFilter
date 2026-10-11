@@ -7,7 +7,7 @@ namespace Genbox.FastFilter;
 
 /// <summary>A Bloom filter with a configurable number of bits per key.</summary>
 /// <typeparam name="T">The type of keys stored in the filter.</typeparam>
-public class BloomFilter<T> : IBloomFilter<T> where T : notnull
+public class BloomFilter<T> : IFilter<T> where T : notnull
 {
     // A simple Bloom filter. It uses k number of hash functions.
     //

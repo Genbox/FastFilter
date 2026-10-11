@@ -9,7 +9,7 @@ namespace Genbox.FastFilter;
 /// <summary>
 /// A generic variant of the binary fuse filter. Only for advanced use-cases such as 32/64bit binary fuse filters. Use <see cref="BinaryFuse8Filter{T}" /> or <see cref="BinaryFuse16Filter{T}" /> instead.
 /// </summary>
-public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T2 : INumberBase<T2>, IBitwiseOperators<T2, T2, T2>
+public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull where T2 : INumberBase<T2>, IBitwiseOperators<T2, T2, T2>
 {
     // This is the 3-wise variant of the binary fuse filter.
     // Built with generic math to support 8bit and 16bit variants using the same codebase.
@@ -58,9 +58,6 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
 
     /// <inheritdoc />
     public uint GetMemoryUsage() => (_arrayLength * (uint)Unsafe.SizeOf<T2>()) + (uint)Unsafe.SizeOf<BinaryFuseFilter<T, T2>>();
-
-    /// <inheritdoc />
-    public void Add(T key) => throw new NotSupportedException("Not possible to add items after the initial construction");
 
     /// <inheritdoc />
     public bool Contains(T key)
