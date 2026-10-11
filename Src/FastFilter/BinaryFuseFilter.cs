@@ -103,10 +103,6 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
 
         for (int loop = 0; loop < XorMaxIterations; ++loop)
         {
-            // The probability of this happening is lower than the cosmic-ray probability (i.e., a cosmic ray corrupts your system)
-            if (loop + 1 > XorMaxIterations)
-                throw new InvalidOperationException("The impossible happened");
-
             // important: i * size would overflow as a 32-bit number in some cases.
             for (uint i = 0; i < block; i++)
                 startPos[i] = (uint)(((ulong)i * size) >> blockBits);
@@ -128,7 +124,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
                 startPos[segmentIndex]++;
             }
 
-            int error = 0;
+            bool error = false;
             uint duplicates = 0;
 
             for (uint i = 0; i < size; i++)
@@ -160,12 +156,10 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
                     t2Hash[h2] ^= hash;
                 }
 
-                error = t2Count[h0] < 4 ? 1 : error;
-                error = t2Count[h1] < 4 ? 1 : error;
-                error = t2Count[h2] < 4 ? 1 : error;
+                error |= t2Count[h0] < 4 || t2Count[h1] < 4 || t2Count[h2] < 4;
             }
 
-            if (error != 0)
+            if (error)
             {
                 Array.Clear(reverseOrder, 0, (int)size);
                 Array.Clear(t2Count, 0, (int)_arrayLength);
@@ -191,35 +185,34 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
                 qsize--;
                 uint index = alone[qsize];
 
-                if (t2Count[index] >> 2 == 1)
-                {
-                    ulong hash = t2Hash[index];
+                if (t2Count[index] >> 2 != 1)
+                    continue;
 
-                    //h012[0] = binary_fuse8_hash(0, hash, filter);
-                    h012[1] = Hash(1, hash);
-                    h012[2] = Hash(2, hash);
-                    h012[3] = Hash(0, hash);
-                    h012[4] = h012[1];
+                ulong hash = t2Hash[index];
 
-                    byte found = (byte)(t2Count[index] & 3);
-                    reverseH[stackSize] = found;
-                    reverseOrder[stackSize] = hash;
-                    stackSize++;
-                    uint otherIndex1 = h012[found + 1];
-                    alone[qsize] = otherIndex1;
-                    qsize += t2Count[otherIndex1] >> 2 == 2 ? 1U : 0U;
+                h012[1] = Hash(1, hash);
+                h012[2] = Hash(2, hash);
+                h012[3] = Hash(0, hash);
+                h012[4] = h012[1];
 
-                    t2Count[otherIndex1] -= 4;
-                    t2Count[otherIndex1] ^= Mod3((byte)(found + 1));
-                    t2Hash[otherIndex1] ^= hash;
+                byte found = (byte)(t2Count[index] & 3);
+                reverseH[stackSize] = found;
+                reverseOrder[stackSize] = hash;
+                stackSize++;
+                uint otherIndex1 = h012[found + 1];
+                alone[qsize] = otherIndex1;
+                qsize += t2Count[otherIndex1] >> 2 == 2 ? 1U : 0U;
 
-                    uint otherIndex2 = h012[found + 2];
-                    alone[qsize] = otherIndex2;
-                    qsize += t2Count[otherIndex2] >> 2 == 2 ? 1U : 0U;
-                    t2Count[otherIndex2] -= 4;
-                    t2Count[otherIndex2] ^= Mod3((byte)(found + 2));
-                    t2Hash[otherIndex2] ^= hash;
-                }
+                t2Count[otherIndex1] -= 4;
+                t2Count[otherIndex1] ^= Mod3((byte)(found + 1));
+                t2Hash[otherIndex1] ^= hash;
+
+                uint otherIndex2 = h012[found + 2];
+                alone[qsize] = otherIndex2;
+                qsize += t2Count[otherIndex2] >> 2 == 2 ? 1U : 0U;
+                t2Count[otherIndex2] -= 4;
+                t2Count[otherIndex2] ^= Mod3((byte)(found + 2));
+                t2Hash[otherIndex2] ^= hash;
             }
 
             if (stackSize + duplicates == size)
