@@ -22,7 +22,6 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
     private const uint XorMaxIterations = 100; // probability of success should always be > 0.5 so 100 iterations is highly unlikely
     private readonly uint _arrayLength;
     private readonly T2[] _fingerprints;
-    private readonly uint _segmentCount;
     private readonly uint _segmentCountLength;
     private readonly uint _segmentLength;
     private readonly uint _segmentLengthMask;
@@ -37,7 +36,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
 
         uint size = (uint)data.Length;
 
-        _segmentLength = size == 0 ? 4 : 1U << (int)Floor((Log(size) / Log(3.33f)) + 2.25f);
+        _segmentLength = 1U << (int)Floor((Log(size) / Log(3.33f)) + 2.25f);
 
         //Genbox: This is the same as 1 << 18, which limits the segment length to 18 bits
         if (_segmentLength > 262144)
@@ -47,21 +46,14 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
 
         double sizeFactor = size <= 1 ? 0 : Max(1.125, 0.875 + ((0.25 * Log(1000000.0)) / Log(size)));
         uint capacity = size <= 1 ? 0 : (uint)Round(size * sizeFactor, MidpointRounding.AwayFromZero);
-        uint initSegmentCount = (((capacity + _segmentLength) - 1) / _segmentLength) - 2;
+        uint segmentCount = ((capacity + _segmentLength) - 1) / _segmentLength;
+        segmentCount = segmentCount > 2 ? segmentCount - 2 : 1;
 
-        _arrayLength = (initSegmentCount + 2) * _segmentLength;
-        _segmentCount = ((_arrayLength + _segmentLength) - 1) / _segmentLength;
-
-        if (_segmentCount <= 2)
-            _segmentCount = 1;
-        else
-            _segmentCount -= 2;
-
-        _arrayLength = (_segmentCount + 2) * _segmentLength;
-        _segmentCountLength = _segmentCount * _segmentLength;
+        _arrayLength = (segmentCount + 2) * _segmentLength;
+        _segmentCountLength = segmentCount * _segmentLength;
         _fingerprints = new T2[_arrayLength];
 
-        Populate(data);
+        Populate(data, segmentCount);
     }
 
     /// <inheritdoc />
@@ -87,7 +79,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
         return f == T2.Zero;
     }
 
-    private void Populate(ReadOnlySpan<T> keys)
+    private void Populate(ReadOnlySpan<T> keys, uint segmentCount)
     {
         uint size = (uint)keys.Length;
         _seed = GetSeed();
@@ -99,7 +91,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
         ulong[] t2Hash = new ulong[_arrayLength];
 
         int blockBits = 1;
-        while (1U << blockBits < _segmentCount)
+        while (1U << blockBits < segmentCount)
             blockBits++;
 
         uint block = 1U << blockBits;
