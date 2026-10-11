@@ -20,6 +20,7 @@
 
 using System.Runtime.CompilerServices;
 using Genbox.FastFilter.Abstracts;
+using Genbox.FastFilter.Internals;
 using static Genbox.FastFilter.Internals.Common;
 
 namespace Genbox.FastFilter;
@@ -38,12 +39,14 @@ public class BlockedBloomFilter<T> : IFilter<T> where T : notnull
 
     private readonly ulong[] _array;
     private readonly uint _arrayLength;
+    private readonly Func<T, ulong> _hash;
     private readonly ulong _seed;
 
     /// <summary>Creates an empty filter sized for the expected number of keys.</summary>
     /// <param name="capacity">The expected number of keys.</param>
+    /// <param name="hash">A well-distributed 64-bit hash function that remains stable for the filter's lifetime.</param>
     /// <param name="bitsPerKey">The number of bits to allocate per key.</param>
-    public BlockedBloomFilter(int capacity, int bitsPerKey = 10)
+    public BlockedBloomFilter(int capacity, Func<T, ulong> hash, int bitsPerKey = 10)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bitsPerKey);
@@ -52,15 +55,18 @@ public class BlockedBloomFilter<T> : IFilter<T> where T : notnull
         long buckets = bits / 64;
         long arrayLength = buckets + 8;
         ArgumentOutOfRangeException.ThrowIfGreaterThan(arrayLength, Array.MaxLength, nameof(capacity));
-        _arrayLength = (uint)arrayLength; //Genbox: We save the array length to avoid virtual calls to array.Length
+        _arrayLength = (uint)arrayLength;
         _array = new ulong[_arrayLength];
-        _seed = GetSeed();
+        ArgumentNullException.ThrowIfNull(hash);
+        _hash = hash;
+        _seed = StaticFilterHash.Mix(1UL);
     }
 
     /// <summary>Creates a filter containing the supplied keys.</summary>
     /// <param name="data">The keys to add.</param>
+    /// <param name="hash">A well-distributed 64-bit hash function that remains stable for the filter's lifetime.</param>
     /// <param name="bitsPerKey">The number of bits to allocate per key.</param>
-    public BlockedBloomFilter(ReadOnlySpan<T> data, int bitsPerKey = 10) : this(data.Length, bitsPerKey)
+    public BlockedBloomFilter(ReadOnlySpan<T> data, Func<T, ulong> hash, int bitsPerKey = 10) : this(data.Length, hash, bitsPerKey)
     {
         foreach (ref readonly T item in data)
             Add(item);
@@ -69,7 +75,7 @@ public class BlockedBloomFilter<T> : IFilter<T> where T : notnull
     /// <inheritdoc />
     public void Add(T key)
     {
-        ulong hash = MixSplit(key.GetHashCode(), _seed);
+        ulong hash = StaticFilterHash.Mix(_hash(key) + _seed);
         ulong idx = FastRange32((uint)hash, _arrayLength);
         ulong mask = GetMask(hash);
         _array[idx] |= mask;
@@ -78,18 +84,18 @@ public class BlockedBloomFilter<T> : IFilter<T> where T : notnull
     /// <inheritdoc />
     public bool Contains(T key)
     {
-        ulong hash = MixSplit(key.GetHashCode(), _seed);
+        ulong hash = StaticFilterHash.Mix(_hash(key) + _seed);
         ulong idx = FastRange32((uint)hash, _arrayLength);
         ulong mask = GetMask(hash);
         ulong bucket = _array[idx];
         return (mask & bucket) == mask;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ulong GetMask(ulong hash) => (1UL << (int)hash) | (1UL << (int)(hash >> 8));
-
     /// <inheritdoc />
     public uint GetMemoryUsage() => (_arrayLength * sizeof(ulong)) + (uint)Unsafe.SizeOf<BlockedBloomFilter<T>>();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ulong GetMask(ulong hash) => (1UL << (int)hash) | (1UL << (int)(hash >> 8));
 
     /// <inheritdoc />
     public override string ToString() => "BlockedBloomFilter";

@@ -21,6 +21,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Genbox.FastFilter.Abstracts;
+using Genbox.FastFilter.Internals;
 using static Genbox.FastFilter.Internals.Common;
 
 namespace Genbox.FastFilter;
@@ -37,13 +38,15 @@ public class BloomFilter<T> : IFilter<T> where T : notnull
 
     private readonly ulong[] _array;
     private readonly uint _arrayLength;
+    private readonly Func<T, ulong> _hash;
     private readonly byte _k;
     private readonly ulong _seed;
 
     /// <summary>Creates an empty filter sized for the expected number of keys.</summary>
     /// <param name="capacity">The expected number of keys.</param>
+    /// <param name="hash">A well-distributed 64-bit hash function that remains stable for the filter's lifetime.</param>
     /// <param name="bitsPerKey">The number of bits to allocate per key.</param>
-    public BloomFilter(int capacity, uint bitsPerKey = 8)
+    public BloomFilter(int capacity, Func<T, ulong> hash, uint bitsPerKey = 8)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bitsPerKey);
@@ -54,13 +57,16 @@ public class BloomFilter<T> : IFilter<T> where T : notnull
         ArgumentOutOfRangeException.ThrowIfGreaterThan(arrayLength, (ulong)Array.MaxLength, nameof(capacity));
         _arrayLength = (uint)arrayLength;
         _array = new ulong[_arrayLength];
-        _seed = GetSeed();
+        ArgumentNullException.ThrowIfNull(hash);
+        _hash = hash;
+        _seed = StaticFilterHash.Mix(1UL);
     }
 
     /// <summary>Creates a filter containing the supplied keys.</summary>
     /// <param name="data">The keys to add.</param>
+    /// <param name="hash">A well-distributed 64-bit hash function that remains stable for the filter's lifetime.</param>
     /// <param name="bitsPerKey">The number of bits to allocate per key.</param>
-    public BloomFilter(ReadOnlySpan<T> data, uint bitsPerKey = 8) : this(data.Length, bitsPerKey)
+    public BloomFilter(ReadOnlySpan<T> data, Func<T, ulong> hash, uint bitsPerKey = 8) : this(data.Length, hash, bitsPerKey)
     {
         foreach (ref readonly T item in data)
             Add(item);
@@ -69,7 +75,7 @@ public class BloomFilter<T> : IFilter<T> where T : notnull
     /// <inheritdoc />
     public void Add(T key)
     {
-        ulong hash = MixSplit(key.GetHashCode(), _seed);
+        ulong hash = StaticFilterHash.Mix(_hash(key) + _seed);
         ulong a = BitOperations.RotateLeft(hash, 32);
 
         for (int i = 0; i < _k; i++)
@@ -83,7 +89,7 @@ public class BloomFilter<T> : IFilter<T> where T : notnull
     /// <inheritdoc />
     public bool Contains(T key)
     {
-        ulong hash = MixSplit(key.GetHashCode(), _seed);
+        ulong hash = StaticFilterHash.Mix(_hash(key) + _seed);
         ulong a = BitOperations.RotateLeft(hash, 32);
 
         for (int i = 0; i < _k; i++)

@@ -5,6 +5,12 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <PackageLicenseExpression>MIT AND Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="../../LICENSE.txt" Pack="true" Visible="false" PackagePath="" />
+    <None Include="../../THIRD-PARTY-NOTICES.txt" Pack="true" Visible="false" PackagePath="" />
+    <None Include="../../LICENSES/*.txt" Pack="true" Visible="false" PackagePath="LICENSES" />
+  </ItemGroup>
 </Project>

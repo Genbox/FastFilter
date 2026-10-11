@@ -1,6 +1,8 @@
 <Solution>
     <Folder Name="/_Docs/">
         <File Path="Docs/CONTRIBUTING.md"/>
+        <File Path="LICENSE.txt"/>
+        <File Path="README.md"/>
     </Folder>
     <Folder Name="/_Github/">
         <File Path=".github/FUNDING.yml"/>

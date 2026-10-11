@@ -11,11 +11,18 @@ internal static class Program
 
         int[] data = Enumerable.Range(0, size).ToArray();
 
-        PrintStatistics(new BloomFilter<int>(data), size, trials);
-        PrintStatistics(new BinaryFuse8Filter<int>(data), size, trials);
-        PrintStatistics(new BinaryFuse16Filter<int>(data), size, trials);
-        PrintStatistics(new BlockedBloomFilter<int>(data), size, trials);
+        PrintStatistics(new BloomFilter<int>(data, Hash), size, trials);
+        PrintStatistics(new BinaryFuse8Filter<int>(data, Hash), size, trials);
+        PrintStatistics(new BinaryFuse16Filter<int>(data, Hash), size, trials);
+        PrintStatistics(new BlockedBloomFilter<int>(data, Hash), size, trials);
+        PrintStatistics(new Xor8Filter<int>(data, Hash), size, trials);
+        PrintStatistics(new Ribbon8Filter<int>(data, Hash), size, trials);
+        PrintStatistics(new Burr8Filter<int>(data, Hash), size, trials);
+        PrintStatistics(new Zor8Filter<int>(data, Hash), size, trials);
+        PrintStatistics(new VFilter<int>(data, Hash), size, trials);
     }
+
+    private static ulong Hash(int key) => unchecked((ulong)key.GetHashCode());
 
     private static void PrintStatistics(ImmutableFilter<int> filter, int size, int trials)
     {

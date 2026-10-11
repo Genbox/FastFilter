@@ -1,0 +1,79 @@
+Third-party implementation notices
+
+FastFilter contains MIT-licensed original code and the third-party components
+listed below. The combined package license expression is MIT AND Apache-2.0;
+it is not a choice between licenses. LICENSE.txt applies to original code and
+independent additions, not in place of the licenses on adapted upstream code.
+Preserve the applicable copyright notices and license texts when redistributing.
+
+FastFilter C++ adaptations (Apache-2.0)
+---------------------------------------
+Files: Src/FastFilter/BloomFilter.cs, BlockedBloomFilter.cs,
+BinaryFuseFilter.cs, and Internals/Common.cs.
+Source: https://github.com/FastFilter/fastfilter_cpp
+Reference revision: 5df1dc5063702945f6958e4bda445dd082aed366.
+Source paths: src/bloom/bloom.h, src/xorfilter, and hashing helpers.
+Copyright 2018 the fastfilter_cpp authors
+Original implementations credited to Thomas Mueller Graf and Daniel Lemire.
+Changes: C# ports, generic keys and fingerprints, managed arrays and scratch
+storage, seeded hashing, overflow handling, and construction simplifications.
+License: LICENSES/Apache-2.0.txt.
+
+XOR adaptation (Apache-2.0)
+---------------------------
+File: Src/FastFilter/Xor8Filter.cs.
+Source: https://github.com/FastFilter/xor_singleheader
+Revision: 5b6b321aa5c0c8ef5b5fb3145206f07f3754a0a1.
+Source path: include/xorfilter.h.
+Copyright 2019 Daniel Lemire
+Changes: managed arrays, caller-provided seeded hashes, fingerprint mixing,
+and construction sizing.
+License: LICENSES/Apache-2.0.txt.
+
+Ribbon / BuRR adaptation (Apache-2.0)
+-------------------------------------
+File: Src/FastFilter/Internals/RibbonLayer.cs, used by Ribbon8Filter.cs and
+Burr8Filter.cs.
+Source: https://github.com/lorenzhs/BuRR
+Revision: 2ba071ab728f77d1cebbd14d1f0b9381575730ab.
+Source paths: construction.hpp, query.hpp, and backsubst.hpp.
+Copyright (c) Lorenz Hübschle-Schneider
+Copyright (c) Facebook, Inc. and its affiliates.
+All Rights Reserved.
+Changes: 128-bit managed bands, byte result cells and thresholds, 32-start
+buckets, bounded recursive bumping, and hash derivation.
+License: LICENSES/Apache-2.0.txt.
+
+VFunc / VFilter adaptation (MIT)
+--------------------------------
+File: Src/FastFilter/Internals/VFuncCore.cs, used by VFilter.cs.
+Source: https://github.com/vigna/sux-rs
+Revision: 685e12a73ff3461a304e934c16fc49b35ba5a5e0.
+The MIT option of the upstream dual license is used.
+Copyright (c) 2023, 2025 Inria
+Copyright (c) 2023, 2024, 2025, 2026 Sebastiano Vigna
+Copyright (c) 2023 Tommaso Fontana
+Copyright (c) 2024 Michele Andreata
+Copyright (c) 2025 Dario Moschetti
+Changes: managed implementation, bounded shards with independent seed retries,
+dense Gaussian core solving, and portable packed-word storage.
+License and permission notice: LICENSES/sux-MIT.txt, also reproduced in
+Internals/VFuncCore.cs.
+
+ZOR algorithm reference (independent MIT implementation)
+--------------------------------------------------------
+Files: Src/FastFilter/Zor8Filter.cs and Internals/ZorLayer.cs.
+Algorithm description: https://github.com/Malfoy/ZOR
+Reference revision: 2967cc4907de2af753a7208ef2c566fe045c8d41.
+These files independently implement the described peeling, abandonment, and
+remainder algorithm. No source code was copied or translated from that
+reference repository, which has no license declaration at this revision.
+The reference does not grant a license to its implementation. FastFilter's
+independent implementation is covered by LICENSE.txt.
+
+Distribution
+------------
+The NuGet package includes LICENSE.txt, this notice file, and both license texts
+in LICENSES/. The four pinned upstream distributions above contain no separate
+NOTICE file; their applicable copyright notices are retained here and in the
+adapted source files.

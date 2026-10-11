@@ -21,8 +21,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Genbox.FastFilter.Abstracts;
+using Genbox.FastFilter.Internals;
 using static System.Math;
-using static Genbox.FastFilter.Internals.Common;
 
 namespace Genbox.FastFilter;
 
@@ -42,19 +42,23 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
     private const uint XorMaxIterations = 100; // probability of success should always be > 0.5 so 100 iterations is highly unlikely
     private readonly uint _arrayLength;
     private readonly T2[] _fingerprints;
+
+    private readonly Func<T, ulong> _hash;
     private readonly uint _segmentCountLength;
     private readonly uint _segmentLength;
     private readonly uint _segmentLengthMask;
-
     private ulong _seed;
 
     /// <summary>Creates an immutable filter containing the supplied keys.</summary>
     /// <param name="data">The keys to add.</param>
-    protected BinaryFuseFilter(ReadOnlySpan<T> data)
+    /// <param name="hash">A well-distributed 64-bit hash function that remains stable for the filter's lifetime.</param>
+    protected BinaryFuseFilter(ReadOnlySpan<T> data, Func<T, ulong> hash)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(data.Length, nameof(data));
 
-        uint size = (uint)data.Length;
+        _hash = hash;
+        ulong[] signatures = StaticFilterHash.Signatures(data, hash);
+        uint size = (uint)signatures.Length;
 
         _segmentLength = 1U << (int)Floor((Log(size) / Log(3.33f)) + 2.25f);
 
@@ -73,7 +77,7 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
         _segmentCountLength = segmentCount * _segmentLength;
         _fingerprints = new T2[_arrayLength];
 
-        Populate(data, segmentCount);
+        Populate(signatures, segmentCount);
     }
 
     /// <inheritdoc />
@@ -82,7 +86,7 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
     /// <inheritdoc />
     public bool Contains(T key)
     {
-        ulong hash = MixSplit(key.GetHashCode(), _seed);
+        ulong hash = StaticFilterHash.Mix(_hash(key) + _seed);
         T2 f = Fingerprint(hash);
 
         uint h0 = (uint)BigMul(hash, _segmentCountLength, out _);
@@ -96,10 +100,9 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
         return f == T2.Zero;
     }
 
-    private void Populate(ReadOnlySpan<T> keys, uint segmentCount)
+    private void Populate(ReadOnlySpan<ulong> signatures, uint segmentCount)
     {
-        uint size = (uint)keys.Length;
-        _seed = GetSeed();
+        uint size = (uint)signatures.Length;
 
         ulong[] reverseOrder = new ulong[size + 1];
         uint[] alone = new uint[_arrayLength];
@@ -117,15 +120,27 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
 
         for (int loop = 0; loop < XorMaxIterations; ++loop)
         {
+            _seed = StaticFilterHash.Mix(1UL + (ulong)loop);
+
             // important: i * size would overflow as a 32-bit number in some cases.
             for (uint i = 0; i < block; i++)
                 startPos[i] = (uint)(((ulong)i * size) >> blockBits);
 
             ulong maskblock = block - 1;
 
+            bool error = false;
+
             for (int i = 0; i < size; i++) //Genbox: Switched to int here to avoid cast in array indexer below
             {
-                ulong hash = MixSplit(keys[i].GetHashCode(), _seed);
+                ulong hash = StaticFilterHash.Mix(signatures[i] + _seed);
+
+                // Zero marks an unused slot in reverseOrder; choose another layout if it occurs.
+                if (hash == 0)
+                {
+                    error = true;
+                    break;
+                }
+
                 ulong segmentIndex = hash >> (64 - blockBits);
 
                 while (reverseOrder[startPos[segmentIndex]] != 0)
@@ -138,8 +153,11 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
                 startPos[segmentIndex]++;
             }
 
-            bool error = false;
-            uint duplicates = 0;
+            if (error)
+            {
+                Array.Clear(reverseOrder, 0, (int)size);
+                continue;
+            }
 
             for (uint i = 0; i < size; i++)
             {
@@ -156,20 +174,6 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
                 t2Hash[h2] ^= hash;
                 t2Count[h2] ^= 2;
 
-                if ((t2Hash[h0] & t2Hash[h1] & t2Hash[h2]) == 0 &&
-                    ((t2Hash[h0] == 0 && t2Count[h0] == 8) || (t2Hash[h1] == 0 && t2Count[h1] == 8) || (t2Hash[h2] == 0 && t2Count[h2] == 8)))
-                {
-                    duplicates++;
-                    t2Count[h0] -= 4;
-                    t2Hash[h0] ^= hash;
-                    t2Count[h1] -= 4;
-                    t2Count[h1] ^= 1;
-                    t2Hash[h1] ^= hash;
-                    t2Count[h2] -= 4;
-                    t2Count[h2] ^= 2;
-                    t2Hash[h2] ^= hash;
-                }
-
                 error |= t2Count[h0] < 4 || t2Count[h1] < 4 || t2Count[h2] < 4;
             }
 
@@ -178,7 +182,6 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
                 Array.Clear(reverseOrder, 0, (int)size);
                 Array.Clear(t2Count);
                 Array.Clear(t2Hash);
-                _seed = GetSeed();
                 continue;
             }
 
@@ -229,34 +232,15 @@ public class BinaryFuseFilter<T, T2> : ImmutableFilter<T> where T : notnull wher
                 t2Hash[otherIndex2] ^= hash;
             }
 
-            if (stackSize + duplicates == size)
+            if (stackSize == size)
             {
-                // success
-                size = stackSize;
                 success = true;
                 break;
-            }
-
-            if (duplicates > 0)
-            {
-                HashSet<int> uniqueHashes = new HashSet<int>(keys.Length);
-                T[] uniqueKeys = new T[keys.Length];
-                int uniqueCount = 0;
-
-                for (int i = 0; i < keys.Length; i++)
-                {
-                    if (uniqueHashes.Add(keys[i].GetHashCode()))
-                        uniqueKeys[uniqueCount++] = keys[i];
-                }
-
-                size = (uint)uniqueCount;
-                keys = uniqueKeys.AsSpan(0, uniqueCount);
             }
 
             Array.Clear(reverseOrder, 0, (int)size);
             Array.Clear(t2Count);
             Array.Clear(t2Hash);
-            _seed = (ulong)Random.Shared.NextInt64();
         }
 
         if (!success)
