@@ -117,7 +117,7 @@ public class BinaryFuseFilter<T, T2> : IBloomFilter<T> where T : notnull where T
 
             // important: i * size would overflow as a 32-bit number in some cases.
             for (uint i = 0; i < block; i++)
-                startPos[i] = (uint)((ulong)i * size) >> blockBits;
+                startPos[i] = (uint)(((ulong)i * size) >> blockBits);
 
             ulong maskblock = block - 1;
 
